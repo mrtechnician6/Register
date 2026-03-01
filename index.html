@@ -90,7 +90,7 @@
 
     <main class="container">
         <div class="stats-box">
-            <div><p style="color:#64748b; font-size:0.7rem; font-weight:bold;">TOTAL STUDENTS</p><p id="student-count" style="font-size:1.8rem; font-weight:800; color:var(--brand);">0</p></div>
+            <div><p style="color:#64748b; font-size:0.7rem; font-weight:bold;">TOTAL ENROLLED</p><p id="student-count" style="font-size:1.8rem; font-weight:800; color:var(--brand);">0</p></div>
             <div style="font-weight:900; color:#cbd5e1; font-size:0.9rem;">NK DIGITAL</div>
         </div>
         <div id="record-grid"></div>
@@ -118,48 +118,63 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwteftRrWcI6wWHPaEXXNM_ZKcc3cuE1GnPyWWDkXL-6xmB636mMyDlCIHcjkM7uc1jdg/exec";
+        
+        // Storage v3 with cloud-sync capability
         let records = JSON.parse(localStorage.getItem('shree_v3_clean')) || [];
 
-        // --- THE LIVE SEARCH ENGINE ---
         const searchInput = document.getElementById('search-input');
-        
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase().trim();
-            const filtered = records.filter(r => 
-                r.name.toLowerCase().includes(term) || 
-                r.grade.toLowerCase().includes(term)
-            );
-            render(filtered, term);
-        });
-
-        // --- MODAL LOGIC ---
         const overlay = document.getElementById('overlay');
         const openBtn = document.getElementById('open-btn');
         const form = document.getElementById('reg-form');
 
+        // --- 1. THE "STARTS WITH" SEARCH ENGINE ---
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            const filtered = records.filter(r => {
+                // Focus ONLY on the first alphabet/start of name or grade
+                const nameMatch = r.name.toLowerCase().startsWith(term);
+                const gradeMatch = r.grade.toString().toLowerCase().startsWith(term);
+                return nameMatch || gradeMatch;
+            });
+            render(filtered, term);
+        });
+
+        // --- 2. CLOUD SYNC: EDIT IN SHEET -> REFLECT ON WEB ---
+        async function syncWithCloud() {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const cloudData = await response.json();
+                if (cloudData && Array.isArray(cloudData)) {
+                    records = cloudData.reverse(); // Newest first
+                    localStorage.setItem('shree_v3_clean', JSON.stringify(records));
+                    render();
+                }
+            } catch (err) { console.warn("Offline: Using local records."); }
+        }
+
+        // --- 3. UI MODAL LOGIC ---
         const toggle = (e) => { if(e) e.preventDefault(); overlay.classList.toggle('active'); };
         openBtn.addEventListener('click', toggle);
         openBtn.addEventListener('touchstart', toggle);
         overlay.onclick = (e) => { if(e.target === overlay) toggle(); };
 
-        // --- RENDER LOGIC ---
+        // --- 4. THE RENDER ENGINE ---
         function render(dataToDisplay = records, searchTerm = "") {
             const grid = document.getElementById('record-grid');
             document.getElementById('student-count').innerText = dataToDisplay.length;
             grid.innerHTML = '';
             
-            // Scenario: No search results found
+            // Search result logic for "No Student Found"
             if (dataToDisplay.length === 0 && searchTerm !== "") {
                 grid.innerHTML = `
                     <div style="text-align: center; padding: 50px 20px;">
-                        <i class="fa-solid fa-user-slash" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 15px;"></i>
-                        <h3 style="color: #0f172a;">Student Not Found</h3>
-                        <p style="color: #64748b;">No one registered matches "${searchTerm}"</p>
+                        <i class="fa-solid fa-user-xmark" style="font-size: 3.5rem; color: #cbd5e1; margin-bottom: 15px;"></i>
+                        <h3 style="color: #0f172a;">No Student Found</h3>
+                        <p style="color: #64748b;">No registered name starts with "${searchTerm}"</p>
                     </div>`;
                 return;
             }
 
-            // Scenario: Empty database
             if (records.length === 0) {
                 grid.innerHTML = '<p style="text-align:center; color:#94a3b8; margin-top:50px;">Waiting for first registration...</p>';
                 return;
@@ -174,23 +189,22 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <h3 style="color:#0f172a; margin-bottom:4px;">${r.name}</h3>
-                            <p style="font-size:0.8rem; color:#64748b;">Grade: ${r.grade} • <span style="color:var(--brand)">Details</span></p>
+                            <p style="font-size:0.8rem; color:#64748b;">Grade: ${r.grade} • <span style="color:var(--brand)">Tap to view</span></p>
                         </div>
                         <i class="fa-solid fa-chevron-down" style="color:#cbd5e1; font-size:0.8rem;"></i>
                     </div>
                     <div class="student-details">
-                        <div class="detail-item"><i class="fa-solid fa-calendar"></i> <strong>Age:</strong> ${r.age}</div>
-                        <div class="detail-item"><i class="fa-solid fa-user-shield"></i> <strong>Parent:</strong> ${r.gName}</div>
-                        <div class="detail-item"><i class="fa-solid fa-phone"></i> <strong>Contact:</strong> ${r.gPhone}</div>
-                        <div class="detail-item"><i class="fa-solid fa-envelope"></i> <strong>Email:</strong> ${r.email}</div>
-                        <div class="detail-item"><i class="fa-solid fa-map-location-dot"></i> <strong>Address:</strong> ${r.address}</div>
+                        <div class="detail-item"><i class="fa-solid fa-calendar-day"></i> <strong>Age:</strong> ${r.age}</div>
+                        <div class="detail-item"><i class="fa-solid fa-user-check"></i> <strong>Guardian:</strong> ${r.gName}</div>
+                        <div class="detail-item"><i class="fa-solid fa-phone-flip"></i> <strong>Contact:</strong> ${r.gPhone}</div>
+                        <div class="detail-item"><i class="fa-solid fa-map-pin"></i> <strong>Address:</strong> ${r.address}</div>
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        // --- SUBMIT LOGIC ---
+        // --- 5. REGISTRATION LOGIC ---
         form.onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
@@ -211,14 +225,16 @@
                 await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
                 records.unshift(data);
                 localStorage.setItem('shree_v3_clean', JSON.stringify(records));
-                alert("✅ Student Registered!");
+                alert("✅ Registered Successfully!");
                 form.reset();
                 toggle();
                 render();
-            } catch (err) { alert("Network Error. Data saved locally."); }
+            } catch (err) { alert("Registration saved locally."); }
             finally { btn.innerText = "Complete Registration"; btn.disabled = false; }
         };
 
+        // Initialize
+        syncWithCloud();
         render();
     </script>
 </body>
