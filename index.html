@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shree Kinder Garden Academy</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="premium-header">
+        <h1 class="school-name">Shree Kinder Garden Academy</h1>
+        <p class="tagline">Student Registration System</p>
+        <div class="search-box">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="search-input" placeholder="Search students..." onkeyup="searchRecords()">
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <div class="stats-card">
+            <span class="label">Total Enrolled</span>
+            <span class="count" id="student-count">0</span>
+        </div>
+        <div id="record-grid" class="record-grid"></div>
+    </main>
+
+    <button class="fab-trigger" id="open-form-btn">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <div class="glass-overlay" id="form-overlay">
+        <div class="registration-panel">
+            <div class="panel-header">
+                <h2>New Registration</h2>
+                <span class="close-icon" id="close-form-btn">&times;</span>
+            </div>
+            <form id="record-form">
+                <input type="text" id="name" placeholder="Student Full Name" required>
+                <div class="row">
+                    <input type="number" id="age" placeholder="Age" required>
+                    <input type="text" id="grade" placeholder="Grade (LKG/UKG)" required>
+                </div>
+                <input type="text" id="g-name" placeholder="Guardian Name" required>
+                <input type="tel" id="g-phone" placeholder="Phone Number" required>
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="text" id="address" placeholder="Home Address" required>
+                <button type="submit" id="submit-btn">Complete Registration</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
