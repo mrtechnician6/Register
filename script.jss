@@ -1,40 +1,47 @@
-function searchRecords() {
-    const term = document.getElementById('search-input').value.toLowerCase().trim();
+// 1. Link the search input to the code
+const searchInput = document.getElementById('search-input');
+
+// 2. Create the Search Function
+function handleSearch() {
+    const term = searchInput.value.toLowerCase().trim();
     const grid = document.getElementById('record-grid');
     
-    // Filter the records based on Name or Grade
+    // Filter from your main 'records' list
     const filtered = records.filter(r => 
         r.name.toLowerCase().includes(term) || 
         r.grade.toLowerCase().includes(term)
     );
 
-    // Update the student count display for the search results
+    // Update the count display
     document.getElementById('student-count').innerText = filtered.length;
 
-    // Clear the grid to show results
+    // Clear grid for results
     grid.innerHTML = '';
 
     if (filtered.length > 0) {
-        // Show the found students
+        // Show found students using your existing render logic
         render(filtered); 
     } else {
-        // THE NEW FEATURE: "Student not registered" message
+        // THE "NOT REGISTERED" FEATURE
         grid.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #64748b;">
-                <i class="fa-solid fa-user-slash" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
-                <h3 style="color: #0f172a;">Student not found</h3>
-                <p>This student is not registered in our academy yet.</p>
+            <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                <i class="fa-solid fa-user-xmark" style="font-size: 3.5rem; margin-bottom: 15px; color: #cbd5e1;"></i>
+                <h3 style="color: #0f172a; margin-bottom: 10px;">Student Not Found</h3>
+                <p>This student is not registered in <b>Shree Kinder Garden Academy</b>.</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">Try checking the spelling or register them using the + button.</p>
             </div>
         `;
     }
 }
 
-// UPDATE: Modify your existing render function slightly to accept a list
+// 3. The "Event Listener" - This makes it run!
+searchInput.addEventListener('input', handleSearch);
+
+// 4. Update your Render function to accept the filtered list
 function render(dataToDisplay = records) {
     const grid = document.getElementById('record-grid');
-    grid.innerHTML = ''; // Clear current view
+    grid.innerHTML = ''; 
     
-    // If no data exists at all in the system
     if (records.length === 0) {
         grid.innerHTML = '<p style="text-align:center; color:#94a3b8; margin-top:30px;">Ready for first registration!</p>';
         return;
